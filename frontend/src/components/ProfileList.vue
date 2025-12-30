@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Profiles } from '@/types'
+import type { Profile } from '@/types'
 import { ElMessage } from 'element-plus'
 
 interface Props {
-  profiles: Profiles[]
+  profiles: Profile[]
 }
 
 const props = defineProps<Props>()
@@ -28,11 +28,11 @@ const formatDate = (timestamp: number) => {
   })
 }
 
-const handleAction = (profile: Profiles, action: string) => {
+const handleAction = (profile: Profile, action: string) => {
   ElMessage.success(`Action "${action}" applied to ${profile.username}`)
 }
 
-const goToProfile = (profile: Profiles) => {
+const goToProfile = (profile: Profile) => {
   window.open(profile.url, '_blank')
 }
 

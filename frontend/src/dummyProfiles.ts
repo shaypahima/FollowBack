@@ -1,6 +1,6 @@
-import type { Profiles } from './types';
+import type { Profile } from './types';
 
-const DUMMY_PROFILES: Profiles[] = [
+const DUMMY_PROFILES: Profile[] = [
   { username: 'john_doe', url: 'https://example.com/john_doe', timestamp: 1703721600000, status: 'Approved' },
   { username: 'jane_smith', url: 'https://example.com/jane_smith', timestamp: 1703808000000, status: 'Unfollowed' },
   { username: 'alex_johnson', url: 'https://example.com/alex_johnson', timestamp: 1703894400000, status: 'Approved' },

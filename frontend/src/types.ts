@@ -1,4 +1,4 @@
-export interface Profiles {
+export interface Profile {
   username: string;
   url: string;
   timestamp: number;

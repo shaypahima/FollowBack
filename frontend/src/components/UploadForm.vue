@@ -3,6 +3,14 @@ import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Upload } from '@element-plus/icons-vue'
 import type { UploadProps, UploadUserFile } from 'element-plus'
+import { useRouter } from 'vue-router'
+import { useProfileStore } from '@/store/profile'
+
+
+const router = useRouter()
+const store = useProfileStore()
+
+const { uploadFile } = store
 
 const fileList = ref<UploadUserFile[]>([])
 
@@ -34,15 +42,16 @@ const handleUpload = async () => {
     return
   }
 
-  const formData = new FormData()
-  fileList.value.forEach((file) => {
-    if (file.raw) {
-      formData.append('file', file.raw)
-    }
-  })
+  const file = fileList.value[0]?.raw
+  if (!file) {
+    ElMessage.warning('Please select a file to upload')
+    return
+  }
 
   try {
-    ElMessage.success('File uploaded successfully!')
+    await uploadFile(file)
+    fileList.value = []
+    router.push('/')
   } catch {
     ElMessage.error('Failed to upload file')
   }
