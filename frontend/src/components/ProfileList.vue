@@ -8,6 +8,9 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const updatedProfiles = ref<Profile[]>([])
+
+const modifiedProfiles = ref<Record<string, string>>({})
 
 const currentPage = ref(1)
 const pageSize = ref(10)
@@ -17,6 +20,13 @@ const paginatedProfiles = computed(() => {
   const end = start + pageSize.value
   return props.profiles.slice(start, end)
 })
+
+
+
+const applyProfilesUpdate = () => {
+  ElMessage.success("apply triggered");
+
+}
 
 const formatDate = (timestamp: number) => {
   return new Date(timestamp).toLocaleDateString('en-US', {
@@ -28,7 +38,12 @@ const formatDate = (timestamp: number) => {
   })
 }
 
-const handleAction = (profile: Profile, action: string) => {
+const updateProfileState = (profile: Profile, action: string) => {
+  if (modifiedProfiles.value[profile.username] === action) {
+    delete modifiedProfiles.value[profile.username]
+  } else {
+    modifiedProfiles.value[profile.username] = action
+  }
   ElMessage.success(`Action "${action}" applied to ${profile.username}`)
 }
 
@@ -37,10 +52,11 @@ const goToProfile = (profile: Profile) => {
 }
 
 const getStatusType = (status?: string) => {
+
   switch (status) {
     case 'Approved':
       return 'success'
-    case 'Unfollowed':
+    case 'Unfollow':
       return 'warning'
     case 'Not Exist':
       return 'danger'
@@ -95,13 +111,25 @@ const handleSizeChange = (size: number) => {
           <div class="row">
 
             <el-button-group class="actions_group">
-              <el-button size="small" type="warning" @click="handleAction(row, 'Unfollowed')">
-                Unfollowed
+              <el-button
+                size="small"
+                type="warning"
+                :plain="modifiedProfiles[row.username] === 'Unfollowed'"
+                @click="updateProfileState(row, 'Unfollowed')">
+                Unfollow
               </el-button>
-              <el-button size="small" type="success" @click="handleAction(row, 'Approved')">
-                Approved
+              <el-button
+                size="small"
+                type="success"
+                :plain="modifiedProfiles[row.username] === 'Approved'"
+                @click="updateProfileState(row, 'Approved')">
+                Approve
               </el-button>
-              <el-button size="small" type="danger" @click="handleAction(row, 'Not Exist')">
+              <el-button
+                size="small"
+                type="danger"
+                :plain="modifiedProfiles[row.username] === 'Not Exist'"
+                @click="updateProfileState(row, 'Not Exist')">
                 Not Exist
               </el-button>
             </el-button-group>
@@ -123,6 +151,7 @@ const handleSizeChange = (size: number) => {
         @current-change="handlePageChange"
         @size-change="handleSizeChange"
       />
+      <el-button type="info" @click="applyProfilesUpdate()">Update Profiles</el-button>
     </div>
   </el-card>
 </template>
@@ -134,6 +163,7 @@ const handleSizeChange = (size: number) => {
   }
   .row{
     display: flex;
+
   }
 .card-header {
   display: flex;
@@ -145,6 +175,7 @@ const handleSizeChange = (size: number) => {
 
 .pagination-container {
   margin-top: 20px;
+  gap: 15px;
   display: flex;
   justify-content: center;
 }
