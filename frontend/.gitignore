@@ -12,7 +12,10 @@ node_modules
 dist
 dist-ssr
 coverage
+prisma/
 *.local
+package-lock.json
+bun.lock
 
 # Editor directories and files
 .vscode/*
