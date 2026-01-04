@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import type { Profile } from '@/types'
+import type { Profile, Status } from '@/types'
 import { ElMessage } from 'element-plus'
+import { useProfileStore } from '@/store/profile';
 
 interface Props {
   profiles: Profile[]
@@ -9,9 +10,9 @@ interface Props {
 
 const props = defineProps<Props>()
 const updatedProfiles = ref<Profile[]>([])
-
-const modifiedProfiles = ref<Record<string, string>>({})
-
+const store = useProfileStore()
+const modifiedProfiles = ref<Record<string, Status>>({})
+const { updateProfiles } = store
 const currentPage = ref(1)
 const pageSize = ref(10)
 
@@ -24,6 +25,7 @@ const paginatedProfiles = computed(() => {
 
 
 const applyProfilesUpdate = () => {
+  updateProfiles(modifiedProfiles.value)
   ElMessage.success("apply triggered");
 
 }
@@ -39,11 +41,14 @@ const formatDate = (timestamp: number) => {
 }
 
 const updateProfileState = (profile: Profile, action: string) => {
+
   if (modifiedProfiles.value[profile.username] === action) {
     delete modifiedProfiles.value[profile.username]
   } else {
     modifiedProfiles.value[profile.username] = action
   }
+  console.log( "modifiedProfiles: " + modifiedProfiles.value[profile.username]);
+  console.log( "updatedProfiles: " + updatedProfiles.value);
   ElMessage.success(`Action "${action}" applied to ${profile.username}`)
 }
 
@@ -122,14 +127,18 @@ const handleSizeChange = (size: number) => {
                 size="small"
                 type="success"
                 :plain="modifiedProfiles[row.username] === 'Approved'"
-                @click="updateProfileState(row, 'Approved')">
+                @click="updateProfileState(row, 'Approved')"
+                :class="{ 'active': modifiedProfiles[row.username] === 'Approved' }"
+                >
                 Approve
               </el-button>
               <el-button
                 size="small"
                 type="danger"
                 :plain="modifiedProfiles[row.username] === 'Not Exist'"
+                :class="{ 'active': modifiedProfiles[row.username] === 'Not Exist' }"
                 @click="updateProfileState(row, 'Not Exist')">
+
                 Not Exist
               </el-button>
             </el-button-group>
@@ -157,6 +166,7 @@ const handleSizeChange = (size: number) => {
 </template>
 
 <style scoped>
+
   .actions_group{
     margin: 0 2px;
     min-width: 16rem;

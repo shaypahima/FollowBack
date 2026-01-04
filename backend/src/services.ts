@@ -1,4 +1,4 @@
-import { Status } from "../prisma/generated/client";
+import { Status } from "./generated/prisma/client";
 import { prisma } from "./db";
 import { extractInstagramData, getNotFollowingBack, getZipFromForm } from "./helpers";
 import { Profile } from "./types";
@@ -17,23 +17,17 @@ export const fileToNotFollowingBack = async (file: File) => {
 
 };
 
-export const updateProfilesDB = async (profiles: Profile[]) => {
-
+export const updateProfilesDB = async (profiles: Record<string,string>) => {
+  console.log( "profiles: " + JSON.stringify(profiles));
   const existenceChecks = await Promise.all(
-    profiles.map(async (profile) => ({
-      profile,
-      exists: !!(await prisma.profile.findUnique({ where: { username: profile.username } })),
+    
+    Object.entries(profiles).map(async ([username, status]) => ({
+      username,
+      status: status as Status,
+      exists: !!(await prisma.profile.findUnique({ where: { username } })),
     }))
   );
-  const profilesToAdd = existenceChecks.filter(({ exists }) => !exists).map(({ profile }) => profile);
-  await prisma.profile.createMany({
-    data: profilesToAdd.map((profile) => ({
-      username: profile.username,
-      url: profile.url,
-      timestamp: profile.timestamp,
-    })),
-  });
-  const profilesToUpdate = profiles.filter((profile) => profile.status);
+  const profilesToUpdate = existenceChecks.filter(({ exists }) => exists).map(({ username, status }) => ({ username, status }));
   await prisma.$transaction(
     profilesToUpdate.map((profile) =>
       prisma.profile.update({

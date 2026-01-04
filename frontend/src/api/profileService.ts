@@ -1,4 +1,4 @@
-import type { Profile } from "@/types";
+
 import { apiClient } from "./apiClient";
 
 export const profileService = {
@@ -22,8 +22,15 @@ export const profileService = {
     return { profiles: response.data.data || response.data.profiles || [] };
   },
 
-  updateProfiles: async (profiles: Profile[]) => {
-    const response = await apiClient.post('/profiles/update-profiles', { profiles });
+  updateProfiles: async (profiles: Record<string,string>) => {
+    console.log( "profiles: " + JSON.stringify(profiles));
+    const response = await apiClient.post('/profiles/update-profiles', { updatedProfiles: profiles }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      
+    });
+    console.log(response.data);
     return response.data;
   },
 };

@@ -42,8 +42,9 @@ const uploadZipFile = async (c: Context) => {
 };
 const updateProfiles = async (c: Context) => {
   try {
-    const body = await c.req.parseBody();
-    const profiles = body["profiles"] as unknown as Profile[];
+    const body = await c.req.json();
+    const profiles = body["updatedProfiles"] as unknown as Record<string,string>;
+    console.log("body: " + JSON.stringify(body));
     await updateProfilesDB(profiles);
     const allProfiles = await getProfiles();
     return c.json({ success: true, profiles: allProfiles });
