@@ -4,10 +4,12 @@
     "dev": "bun run --hot src/index.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "@prisma/adapter-pg": "^7.2.0",
     "@prisma/client": "^7.2.0",
     "@prisma/extension-accelerate": "^3.0.1",
     "adm-zip": "^0.5.16",
+    "dotenv": "^17.2.3",
     "hono": "^4.11.3",
     "pg": "^8.16.3"
   },

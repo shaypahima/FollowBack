@@ -5,3 +5,7 @@ package-lock.json
 bun.lock
 prisma/
 
+
+/src/generated/prisma
+
+/src/generated/prisma
