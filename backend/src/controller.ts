@@ -3,9 +3,10 @@ import { extractInstagramData, getZipFromForm } from "./helpers";
 import {
   fileToNotFollowingBack,
   getProfiles,
-  updateProfilesDB,
 } from "./services";
-import { Profile } from "./types";
+
+import profileRepository from "./repositories";
+import { Profile, Status } from "./generated/prisma/client";
 
 const getNotFollowingBack = (c: Context) => {
   return c.text("response");
@@ -27,8 +28,7 @@ const uploadZipFile = async (c: Context) => {
 
   try {
     const notFollowingBackProfiles = await fileToNotFollowingBack(file);
-    await updateProfilesDB(notFollowingBackProfiles);
-
+    await profileRepository.addProfiles(notFollowingBackProfiles as unknown  as Profile[]);
     const allProfiles = await getProfiles();
     return c.json({
       success: true,
@@ -43,11 +43,9 @@ const uploadZipFile = async (c: Context) => {
 const updateProfiles = async (c: Context) => {
   try {
     const body = await c.req.json();
-    const profiles = body["updatedProfiles"] as unknown as Record<string,string>;
-    console.log("body: " + JSON.stringify(body));
-    await updateProfilesDB(profiles);
-    const allProfiles = await getProfiles();
-    return c.json({ success: true, profiles: allProfiles });
+    const profiles = body["updatedProfiles"] as unknown as Record<string,Status>;
+    await profileRepository.updateProfileStatus(profiles as Record<string, Status>);
+    return c.json({ success: true });
   } catch (error) {
     console.error(error);
     return c.json({ error: "Failed to update profiles" }, 500);

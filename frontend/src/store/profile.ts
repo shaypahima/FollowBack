@@ -42,7 +42,9 @@ export const useProfileStore = defineStore('profile', () => {
     try {
       loading.value = true
       const response = await profileService.updateProfiles(updatedProfiles)
-      profiles.value = response.profiles
+      if (response.profiles && Array.isArray(response.profiles)) {
+        profiles.value = response.profiles
+      }
       ElMessage.success('Profiles updated successfully!')
     } catch (err) {
       error.value = err as Error
