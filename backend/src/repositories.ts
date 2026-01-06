@@ -4,7 +4,7 @@ import { Status } from "./generated/prisma/enums";
 
 interface ProfileRepository {
   addProfiles(profiles: Profile[]): Promise<Profile[]>;
-  updateProfileStatus(profiles: Record<string, Status>): Promise<Profile[]>;
+  updateProfileStatus(profiles: Record<string, Status | null>): Promise<Profile[]>;
 }
 
 const profileRepository: ProfileRepository = {
@@ -26,11 +26,11 @@ const profileRepository: ProfileRepository = {
       })
     );
   },
-  async updateProfileStatus(profiles: Record<string, Status>) {
+  async updateProfileStatus(profiles: Record<string, Status | null>) {
     console.log("profiles: " + JSON.stringify(profiles));
     console.log("profile statuses: " + Object.entries(profiles).map(([username, status]) => `${username}: ${status}`).join(', '));
     
-    const mapStatus = (status: string): Status => {
+    const mapStatus = (status: string | undefined): Status | null => {
       if (status === 'Not Exist') {
         return 'NOT_EXISTED' as Status;
       }
@@ -40,7 +40,7 @@ const profileRepository: ProfileRepository = {
       if (status === 'Approved') {
         return 'APPROVED' as Status;
       }
-      return status as Status;
+      return null;
     };
     
     return await Promise.all(

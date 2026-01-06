@@ -9,6 +9,7 @@ import { useProfileStore } from '@/store/profile'
 
 const router = useRouter()
 const store = useProfileStore()
+const  loading = ref(false)
 
 const { uploadFile } = store
 
@@ -37,6 +38,7 @@ const beforeUpload: UploadProps['beforeUpload'] = (file) => {
 }
 
 const handleUpload = async () => {
+  loading.value = true;
   if (fileList.value.length === 0) {
     ElMessage.warning('Please select a file to upload')
     return
@@ -54,6 +56,9 @@ const handleUpload = async () => {
     router.push('/')
   } catch {
     ElMessage.error('Failed to upload file')
+  }
+  finally {
+    loading.value = false;
   }
 }
 
@@ -85,11 +90,12 @@ const handleChange: UploadProps['onChange'] = (file, uploadFiles) => {
       :on-change="handleChange"
       :limit="1"
       accept=".zip"
+      :loading="loading"
     >
       <el-icon class="el-icon--upload">
-        <Upload />
+        <Upload  />
       </el-icon>
-      <div class="el-upload__text">Drop ZIP file here or <em>click to upload</em></div>
+      <div class="el-upload__text">Drop ZIP file here or <em>click to upload</em> <el-icon v-if="loading" class="el-icon--loading"><Loading /></el-icon></div>
       <template #tip>
         <div class="el-upload__tip">Only ZIP files less than 50MB are allowed</div>
       </template>
@@ -97,7 +103,8 @@ const handleChange: UploadProps['onChange'] = (file, uploadFiles) => {
 
     <el-button
       type="primary"
-      :disabled="fileList.length === 0"
+      :disabled="fileList.length === 0 "
+      :loading="loading"
       @click="handleUpload"
       class="upload-button"
     >

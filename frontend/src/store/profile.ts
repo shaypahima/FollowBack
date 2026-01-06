@@ -38,7 +38,7 @@ export const useProfileStore = defineStore('profile', () => {
     }
   }
 
-  async function updateProfiles(updatedProfiles: Record<string,string>) {
+  async function updateProfiles(updatedProfiles: Record<string,string | null>) {
     try {
       loading.value = true
       const response = await profileService.updateProfiles(updatedProfiles)

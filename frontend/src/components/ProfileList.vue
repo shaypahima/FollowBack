@@ -2,29 +2,28 @@
 import { ref, computed } from 'vue'
 import type { Profile, Status } from '@/types'
 import { ElMessage } from 'element-plus'
-import { Sort, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
-import { useProfileStore } from '@/store/profile';
+import { Sort, ArrowUp, ArrowDown, Refresh } from '@element-plus/icons-vue'
+import { useProfileStore } from '@/store/profile'
 
 interface Props {
   profiles: Profile[]
 }
-
 const props = defineProps<Props>()
-const updatedProfiles = ref<Profile[]>([])
+const modifiedProfiles = ref<Record<string, Status | null>>({})
+
 const store = useProfileStore()
-const modifiedProfiles = ref<Record<string, Status>>({})
-const { updateProfiles } = store
+const { updateProfiles, getProfiles } = store
+
 const currentPage = ref(1)
 const pageSize = ref(10)
 const sortOrder = ref<'default' | 'status-asc' | 'status-desc'>('default')
-const statusFilter = ref<'no-status' | 'APPROVED' | 'UNFOLLOWED' | 'NOT_EXISTED' | 'all'>('all')
+const statusFilter = ref<'no-status' | 'APPROVED' | 'UNFOLLOWED' | 'NOT_EXISTED' | 'all'>('no-status')
 
 const statusPriority: Record<string, number> = {
-  'APPROVED': 1,
-  'UNFOLLOWED': 2,
-  'NOT_EXISTED': 3,
+  APPROVED: 1,
+  UNFOLLOWED: 2,
+  NOT_EXISTED: 3,
 }
-
 const filteredProfiles = computed(() => {
   if (!props.profiles || !Array.isArray(props.profiles)) {
     return []
@@ -35,10 +34,10 @@ const filteredProfiles = computed(() => {
   }
 
   if (statusFilter.value === 'no-status') {
-    return props.profiles.filter(profile => !profile.status)
+    return props.profiles.filter((profile) => !profile.status)
   }
 
-  return props.profiles.filter(profile => (profile.status as string) === statusFilter.value)
+  return props.profiles.filter((profile) => (profile.status as string) === statusFilter.value)
 })
 
 const sortedProfiles = computed(() => {
@@ -74,12 +73,10 @@ const paginatedProfiles = computed(() => {
   return sortedProfiles.value.slice(start, end)
 })
 
-
-
 const applyProfilesUpdate = () => {
   updateProfiles(modifiedProfiles.value)
-  ElMessage.success("apply triggered");
-
+  ElMessage.success('apply triggered')
+  getProfiles()
 }
 
 const formatDate = (timestamp: number) => {
@@ -92,16 +89,16 @@ const formatDate = (timestamp: number) => {
   })
 }
 
-const updateProfileState = (profile: Profile, action: string) => {
-
+const updateProfileState = (profile: Profile, action: string | null) => {
   if (modifiedProfiles.value[profile.username] === action) {
+    ElMessage.success(`Action "${action === null ? 'Reset' : action}" removed from ${profile.username}`)
     delete modifiedProfiles.value[profile.username]
   } else {
-    modifiedProfiles.value[profile.username] = action as Status
+    modifiedProfiles.value[profile.username] = action as Status | null
+    ElMessage.success(`Action "${action === null ? 'Reset' : action}" applied to ${profile.username}`)
   }
-  console.log( "modifiedProfiles: " + modifiedProfiles.value[profile.username]);
-  console.log( "updatedProfiles: " + updatedProfiles.value);
-  ElMessage.success(`Action "${action}" applied to ${profile.username}`)
+  console.log('modifiedProfiles: ' + modifiedProfiles.value[profile.username])
+
 }
 
 const goToProfile = (profile: Profile) => {
@@ -157,19 +154,48 @@ const toggleStatusSort = () => {
 const handleFilterChange = () => {
   currentPage.value = 1
 }
+
+const handleRefresh = () => {
+  getProfiles()
+}
+
+const isActive = (user: string, status: string | null) => {
+  const profile = props.profiles.find((profile) => profile.username === user)
+  if (!profile) return false
+
+  const statusDisplay = status ? formatStatusDisplay(status) : null
+  const hasToBeUpdated = modifiedProfiles.value[user] === statusDisplay
+
+  if (status === null) {
+    const hasCurrentStatus = !modifiedProfiles.value[user] && !profile.status
+    return hasToBeUpdated || hasCurrentStatus
+  }
+
+  const hasCurrentStatus = !modifiedProfiles.value[user] && profile.status === status
+  return hasToBeUpdated || hasCurrentStatus
+}
 </script>
 
 <template>
   <el-card>
     <template #header>
       <div class="card-header">
-        <span>Profile List</span>
+        <div class="title-section">
+          <span>Profile List</span>
+          <el-button
+            :icon="Refresh"
+            circle
+            size="small"
+            @click="handleRefresh"
+            title="Refresh"
+          />
+        </div>
         <div class="header-controls">
           <el-select
             v-model="statusFilter"
             @change="handleFilterChange"
             placeholder="Filter by status"
-            style="width: 160px; margin-right: 10px;"
+            style="width: 160px; margin-right: 10px"
           >
             <el-option label="No Status" value="no-status" />
             <el-option label="Approved" value="APPROVED" />
@@ -185,7 +211,7 @@ const handleFilterChange = () => {
     <el-table :data="paginatedProfiles" class="profile-table" stripe>
       <el-table-column prop="username" label="User Name" min-width="150">
         <template #default="{ row }">
-          <el-text tag="b">{{ row.username }}</el-text>
+          <el-text tag="b" class="clickable-username" @click="goToProfile(row)">{{ row.username }}</el-text>
         </template>
       </el-table-column>
 
@@ -221,38 +247,47 @@ const handleFilterChange = () => {
       </el-table-column>
 
       <el-table-column label="Actions" min-width="400" fixed="right">
-        <template  #default="{ row }">
+        <template #default="{ row }">
           <div class="row">
 
-            <el-button-group class="actions_group">
-              <el-button
-                size="small"
-                type="warning"
-                :plain="modifiedProfiles[row.username] === 'Unfollowed'"
-                @click="updateProfileState(row, 'Unfollowed')">
-                Unfollow
-              </el-button>
-              <el-button
-                size="small"
-                type="success"
-                :plain="modifiedProfiles[row.username] === 'Approved'"
-                @click="updateProfileState(row, 'Approved')"
-                :class="{ 'active': modifiedProfiles[row.username] === 'Approved' }"
-                >
-                Approve
-              </el-button>
-              <el-button
-                size="small"
-                type="danger"
-                :plain="modifiedProfiles[row.username] === 'Not Exist'"
-                :class="{ 'active': modifiedProfiles[row.username] === 'Not Exist' }"
-                @click="updateProfileState(row, 'Not Exist')">
+            <el-button
+              size="small"
+              type="success"
+              :plain="isActive(row.username, 'APPROVED')"
+              @click="updateProfileState(row, 'Approved')"
+              :class="{ active: modifiedProfiles[row.username] === 'Approved' }"
+            >
+              Approve
+            </el-button>
+            <el-button
+              size="small"
+              type="warning"
+              :plain="isActive(row.username, 'UNFOLLOWED')"
+              @click="updateProfileState(row, 'Unfollowed')"
+            >
+              Unfollow
+            </el-button>
 
-                Not Exist
-              </el-button>
-            </el-button-group>
+            <el-button
+              size="small"
+              type="danger"
+              :plain="isActive(row.username, 'NOT_EXISTED')"
+              :class="{ active: modifiedProfiles[row.username] === 'Not Exist' }"
+              @click="updateProfileState(row, 'Not Exist')"
+            >
+              Not Exist
+            </el-button>
+            <el-button
+              size="small"
+              type="info"
+              :plain="!isActive(row.username, null)"
+              @click="updateProfileState(row, null)"
+            >
+              Reset Status
+            </el-button>
+
             <el-button size="small" type="primary" @click="goToProfile(row)" class="ml-sm">
-              Go to Profile
+              Go to Profile >
             </el-button>
           </div>
         </template>
@@ -269,27 +304,31 @@ const handleFilterChange = () => {
         @current-change="handlePageChange"
         @size-change="handleSizeChange"
       />
-      <el-button type="info" @click="applyProfilesUpdate()">Update Profiles</el-button>
+      <el-button type="active" @click="applyProfilesUpdate()">Update Profiles</el-button>
     </div>
   </el-card>
 </template>
 
 <style scoped>
-
-  .actions_group{
-    margin: 0 2px;
-    min-width: 16rem;
-  }
-  .row{
-    display: flex;
-
-  }
+.actions_group {
+  margin: 0 2px;
+  min-width: 16rem;
+}
+.row {
+  display: flex;
+}
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 18px;
   font-weight: 500;
+}
+
+.title-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .header-controls {
@@ -341,5 +380,16 @@ const handleFilterChange = () => {
 
 .ml-sm {
   margin-left: 8px;
+}
+
+.clickable-username {
+  cursor: pointer;
+  color: var(--el-color-primary);
+  transition: color 0.2s;
+}
+
+.clickable-username:hover {
+  color: var(--el-color-primary-light-3);
+  text-decoration: underline;
 }
 </style>

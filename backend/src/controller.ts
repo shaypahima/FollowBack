@@ -20,9 +20,11 @@ const getNotExistedProfiles = (c: Context) => {
 
 const uploadZipFile = async (c: Context) => {
   const body = await c.req.parseBody();
+  console.log("body: " + JSON.stringify(body));
   const file = body["file"] as File;
-
+  console.log("file: " + file);
   if (!file) {
+    console.log("No file uploaded");
     return c.json({ error: "No file uploaded" }, 400);
   }
 
@@ -43,8 +45,8 @@ const uploadZipFile = async (c: Context) => {
 const updateProfiles = async (c: Context) => {
   try {
     const body = await c.req.json();
-    const profiles = body["updatedProfiles"] as unknown as Record<string,Status>;
-    await profileRepository.updateProfileStatus(profiles as Record<string, Status>);
+    const profiles = body["updatedProfiles"] as unknown as Record<string,Status | null>;
+    await profileRepository.updateProfileStatus(profiles as Record<string, Status | null>);
     return c.json({ success: true });
   } catch (error) {
     console.error(error);
