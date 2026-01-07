@@ -15,6 +15,9 @@ console.log(`Server is running on ${HOST}:${PORT} in ${ENV} mode`)
 const app = new Hono()
 app.use(cors())
 app.use(logger())
+app.get('/', (c) => {
+  return c.text('OK!',200)
+})
 
 app.route('/profiles',profiles)
 
