@@ -3,8 +3,8 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "start": "bun run src/index.ts",
-    "build": "prisma generate",
-    "postinstall": "prisma generate"
+    "build": "bunx prisma generate",
+    "postinstall": "bunx prisma generate"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
