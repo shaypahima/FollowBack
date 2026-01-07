@@ -1,5 +1,5 @@
 import { profileService } from '@/api/profileService';
-import type { Profile } from '@/types';
+import type { Profile, Status } from '@/types';
 import { ElMessage } from 'element-plus';
 import { ref } from 'vue';
 
@@ -37,7 +37,7 @@ const uploadFile = async (file: File) => {
   }
 };
 
-const updateProfiles = async (updatedProfiles: Profile[]) => {
+const updateProfiles = async (updatedProfiles: Record<string, Status | null>) => {
   try {
     loading.value = true;
     const response = await profileService.updateProfiles(updatedProfiles);
