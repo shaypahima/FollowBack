@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Profile {
+  username  String  @id
+  url       String
+  timestamp Int
+  status    Status?
+}
+
+enum Status {
+  UNFOLLOWED
+  NOT_EXISTED
+  APPROVED
+}
